@@ -1,0 +1,29 @@
+name: Publish packages to AUR
+on:
+  push:
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - defold-bin
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: pkgver
+        run: echo pkgver=$(awk -F= '$1=="pkgver" { print $2 }' ${{ matrix.package }}/PKGBUILD) >> $GITHUB_OUTPUT
+
+      - uses: KSXGitHub/github-actions-deploy-aur@v3
+        with:
+          pkgname: ${{ matrix.package }}
+          pkgbuild: ${{ matrix.package }}/PKGBUILD
+          test: true
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_PRIVATE_SSH_KEY }}
+          commit_message: ${{ steps.pkgver.outputs.pkgver }}

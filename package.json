@@ -1,0 +1,16 @@
+{
+  "name": "aur-packages",
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "ofetch": "^1.4.1"
+  },
+  "trustedDependencies": ["@biomejs/biome"]
+}

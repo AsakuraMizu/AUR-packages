@@ -1,0 +1,39 @@
+name: Update Defold
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 */12 * * *
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: defold-bin
+            channel: editor-alpha
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --production --frozen-lockfile
+      - name: Check for updates
+        id: check
+        run: bun scripts/update-defold.ts --pkg ${{ matrix.package.name }} --channel ${{ matrix.package.channel }}
+
+      - uses: heyhusen/archlinux-package-action@v2
+        with:
+          path: ${{ matrix.package.name }}
+          updpkgsums: true
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: ${{ matrix.package.name }}/PKGBUILD
+          default_author: github-actions
+          pull: --rebase --autostash
+          message: "${{ matrix.package.name }}: update to ${{ steps.check.outputs.version }}"
