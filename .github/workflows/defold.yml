@@ -7,17 +7,17 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
         package:
           - name: defold-bin
-            channel: editor-alpha
+            channel: stable
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.PAT }}
 
@@ -34,7 +34,7 @@ jobs:
           path: ${{ matrix.package.name }}
           updpkgsums: true
 
-      - uses: EndBug/add-and-commit@v9
+      - uses: EndBug/add-and-commit@v10
         with:
           add: ${{ matrix.package.name }}/PKGBUILD
           default_author: github_actions
