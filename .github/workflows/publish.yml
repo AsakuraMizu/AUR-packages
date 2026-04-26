@@ -18,7 +18,7 @@ jobs:
       - id: pkgver
         run: echo pkgver=$(awk -F= '$1=="pkgver" { print $2 }' ${{ matrix.package }}/PKGBUILD) >> $GITHUB_OUTPUT
 
-      - uses: KSXGitHub/github-actions-deploy-aur@v4
+      - uses: KSXGitHub/github-actions-deploy-aur@v4.1.3
         with:
           pkgname: ${{ matrix.package }}
           pkgbuild: ${{ matrix.package }}/PKGBUILD
