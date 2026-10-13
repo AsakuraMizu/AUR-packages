@@ -1,39 +1,44 @@
+import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
-import { ofetch } from 'ofetch';
-import { setOutput } from '@actions/core';
 
 interface Info {
   version: string;
   sha1: string;
 }
 
-const update = async (pkg: string, channel: string) => {
-  const pkgbuild = await Bun.file(`${pkg}/PKGBUILD`).text();
-
-  const info = await ofetch<Info>(`https://d.defold.com/${channel}/info.json`);
-  const version = `${info.version}.${info.sha1.slice(0, 7)}`;
-
-  let updated = pkgbuild
-    .replace(/_sha1=.*/, `_sha1=${info.sha1}`)
-    .replace(/pkgver=.*/, `pkgver=${version}`);
-  if (updated !== pkgbuild) {
-    updated = updated.replace(/pkgrel=.*/, 'pkgrel=1');
-  }
-  await Bun.write(`${pkg}/PKGBUILD`, updated);
-
-  setOutput('version', version);
-};
-
-const { values: args } = parseArgs({
-  args: Bun.argv,
+const {
+  values: { pkg, channel },
+} = parseArgs({
   options: {
     pkg: { type: 'string' },
     channel: { type: 'string' },
   },
-  allowPositionals: true,
 });
-if (args.pkg && args.channel) {
-  update(args.pkg, args.channel);
-} else {
+if (!pkg || !channel) {
   throw new Error('Missing required arguments: --pkg, --channel');
+}
+
+const res = await fetch(`https://d.defold.com/${channel}/info.json`);
+if (!res.ok) {
+  throw new Error(`Failed to fetch ${channel} info: ${res.status}`);
+}
+const info = (await res.json()) as Info;
+const version = `${info.version}.${info.sha1.slice(0, 7)}`;
+
+const path = `${pkg}/PKGBUILD`;
+const pkgbuild = await readFile(path, 'utf8');
+let updated = pkgbuild
+  .replace(/^_sha1=.*/m, `_sha1=${info.sha1}`)
+  .replace(/^pkgver=.*/m, `pkgver=${version}`);
+const changed = updated !== pkgbuild;
+if (changed) {
+  updated = updated.replace(/^pkgrel=.*/m, 'pkgrel=1');
+  await writeFile(path, updated);
+}
+
+if (process.env.GITHUB_OUTPUT) {
+  await appendFile(
+    process.env.GITHUB_OUTPUT,
+    `version=${version}\nchanged=${changed}\n`,
+  );
 }

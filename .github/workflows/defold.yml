@@ -5,9 +5,13 @@ on:
   schedule:
     - cron: 0 */12 * * *
 
+permissions: {}
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     strategy:
       fail-fast: false
@@ -17,26 +21,37 @@ jobs:
             channel: stable
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
-          token: ${{ secrets.PAT }}
+          node-version: 24
 
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --production --frozen-lockfile
       - name: Check for updates
         id: check
-        run: bun scripts/update-defold.ts --pkg ${{ matrix.package.name }} --channel ${{ matrix.package.channel }}
+        run: node scripts/update-defold.ts --pkg ${{ matrix.package.name }} --channel ${{ matrix.package.channel }}
 
-      - uses: AsakuraMizu/pkgbuild-action@master
+      - if: steps.check.outputs.changed == 'true'
+        uses: AsakuraMizu/pkgbuild-action@master
         with:
           path: ${{ matrix.package.name }}
           updpkgsums: true
 
-      - uses: EndBug/add-and-commit@v10
+      - if: steps.check.outputs.changed == 'true'
+        uses: EndBug/add-and-commit@v11
         with:
           add: ${{ matrix.package.name }}/PKGBUILD
           default_author: github_actions
           pull: --rebase --autostash
-          message: "${{ matrix.package.name }}: update to ${{ steps.check.outputs.version }}"
+          message: '${{ matrix.package.name }}: update to ${{ steps.check.outputs.version }}'
+
+  # Commits pushed with GITHUB_TOKEN do not trigger the push workflow.
+  publish:
+    needs: update
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/publish.yml
+    with:
+      base: ${{ github.sha }}
+    secrets: inherit

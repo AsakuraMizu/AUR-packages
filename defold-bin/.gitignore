@@ -1,5 +1,4 @@
-*
-!.gitignore
-!.SRCINFO
-!PKGBUILD
-!Defold.desktop
+/src/
+/pkg/
+*.tar*
+*-LICENSE.txt

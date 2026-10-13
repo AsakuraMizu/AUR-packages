@@ -1,16 +1,19 @@
 {
   "name": "aur-packages",
+  "private": true,
   "type": "module",
+  "scripts": {
+    "check": "oxlint && oxfmt --check && tsc",
+    "fmt": "oxfmt"
+  },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@types/bun": "latest"
+    "@types/node": "^24.12.0",
+    "oxfmt": "^0.72.0",
+    "oxlint": "^1.87.0",
+    "typescript": "^7.0.0"
   },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "engines": {
+    "node": ">=24.12"
   },
-  "dependencies": {
-    "@actions/core": "^1.11.1",
-    "ofetch": "^1.4.1"
-  },
-  "trustedDependencies": ["@biomejs/biome"]
+  "packageManager": "pnpm@12.11.2"
 }
