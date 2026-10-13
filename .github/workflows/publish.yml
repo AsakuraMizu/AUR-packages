@@ -22,6 +22,7 @@ jobs:
         with:
           pkgname: ${{ matrix.package }}
           pkgbuild: ${{ matrix.package }}/PKGBUILD
+          assets: ${{ matrix.package }}/*
           test: true
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}

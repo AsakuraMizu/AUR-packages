@@ -13,13 +13,13 @@ const update = async (pkg: string, channel: string) => {
   const info = await ofetch<Info>(`https://d.defold.com/${channel}/info.json`);
   const version = `${info.version}.${info.sha1.slice(0, 7)}`;
 
-  await Bun.write(
-    `${pkg}/PKGBUILD`,
-    pkgbuild
-      .replace(/_sha1=.*/, `_sha1=${info.sha1}`)
-      .replace(/pkgver=.*/, `pkgver=${version}`)
-      .replace(/pkgrel=.*/, 'pkgrel=1'),
-  );
+  let updated = pkgbuild
+    .replace(/_sha1=.*/, `_sha1=${info.sha1}`)
+    .replace(/pkgver=.*/, `pkgver=${version}`);
+  if (updated !== pkgbuild) {
+    updated = updated.replace(/pkgrel=.*/, 'pkgrel=1');
+  }
+  await Bun.write(`${pkg}/PKGBUILD`, updated);
 
   setOutput('version', version);
 };
